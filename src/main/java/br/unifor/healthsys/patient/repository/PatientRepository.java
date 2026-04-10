@@ -15,6 +15,8 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     boolean existsByCpf(String cpf);
 
+    List<Patient> findByAtivo(boolean ativo);
+
     @Query("SELECT p FROM Patient p WHERE LOWER(p.nome) LIKE LOWER(CONCAT('%', :nome, '%'))")
     List<Patient> findByNomeContainingIgnoreCase(String nome);
 }

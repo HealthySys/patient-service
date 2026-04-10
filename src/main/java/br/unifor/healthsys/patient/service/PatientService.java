@@ -1,10 +1,13 @@
 package br.unifor.healthsys.patient.service;
 
 import br.unifor.healthsys.patient.model.Patient;
+import br.unifor.healthsys.patient.exception.ConflictException;
+import br.unifor.healthsys.patient.exception.NotFoundException;
 import br.unifor.healthsys.patient.repository.PatientRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PatientService {
@@ -16,24 +19,26 @@ public class PatientService {
     }
 
     public Patient create(Patient patient) {
-        if (patient.getCpf() != null && patientRepository.existsByCpf(patient.getCpf())) {
-            throw new IllegalArgumentException("CPF ja cadastrado: " + patient.getCpf());
-        }
+        validateCpf(patient.getCpf(), null);
         return patientRepository.save(patient);
     }
 
-    public List<Patient> findAll() {
-        return patientRepository.findAll();
+    public List<Patient> findAll(Boolean ativo) {
+        if (ativo == null) {
+            return patientRepository.findAll();
+        }
+
+        return patientRepository.findByAtivo(ativo);
     }
 
     public Patient findById(Long id) {
         return patientRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Paciente nao encontrado: " + id));
+                .orElseThrow(() -> new NotFoundException("Paciente nao encontrado: " + id));
     }
 
     public Patient findByCpf(String cpf) {
         return patientRepository.findByCpf(cpf)
-                .orElseThrow(() -> new IllegalArgumentException("Paciente nao encontrado com CPF: " + cpf));
+                .orElseThrow(() -> new NotFoundException("Paciente nao encontrado com CPF: " + cpf));
     }
 
     public List<Patient> searchByName(String nome) {
@@ -42,17 +47,41 @@ public class PatientService {
 
     public Patient update(Long id, Patient updated) {
         Patient existing = findById(id);
+        validateCpf(updated.getCpf(), id);
+
         existing.setNome(updated.getNome());
         existing.setDataNascimento(updated.getDataNascimento());
+        existing.setCpf(updated.getCpf());
         existing.setEmail(updated.getEmail());
         existing.setTelefone(updated.getTelefone());
         existing.setSexo(updated.getSexo());
+        existing.setEndereco(updated.getEndereco());
         existing.setTipoSanguineo(updated.getTipoSanguineo());
         existing.setAlergias(updated.getAlergias());
+        existing.setHistoricoVacinas(updated.getHistoricoVacinas());
+        existing.setAtivo(updated.isAtivo());
+        return patientRepository.save(existing);
+    }
+
+    public Patient updateStatus(Long id, boolean ativo) {
+        Patient existing = findById(id);
+        existing.setAtivo(ativo);
         return patientRepository.save(existing);
     }
 
     public void delete(Long id) {
         patientRepository.delete(findById(id));
+    }
+
+    private void validateCpf(String cpf, Long currentPatientId) {
+        if (cpf == null || cpf.isBlank()) {
+            return;
+        }
+
+        patientRepository.findByCpf(cpf)
+                .filter(patient -> !Objects.equals(patient.getId(), currentPatientId))
+                .ifPresent(patient -> {
+                    throw new ConflictException("CPF já cadastrado: " + cpf);
+                });
     }
 }

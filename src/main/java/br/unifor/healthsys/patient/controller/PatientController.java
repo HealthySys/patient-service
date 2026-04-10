@@ -25,8 +25,8 @@ public class PatientController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Patient>> findAll() {
-        return ResponseEntity.ok(patientService.findAll());
+    public ResponseEntity<List<Patient>> findAll(@RequestParam(required = false) Boolean ativo) {
+        return ResponseEntity.ok(patientService.findAll(ativo));
     }
 
     @GetMapping("/{id}")
@@ -47,6 +47,11 @@ public class PatientController {
     @PutMapping("/{id}")
     public ResponseEntity<Patient> update(@PathVariable Long id, @Valid @RequestBody Patient patient) {
         return ResponseEntity.ok(patientService.update(id, patient));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Patient> updateStatus(@PathVariable Long id, @RequestParam boolean ativo) {
+        return ResponseEntity.ok(patientService.updateStatus(id, ativo));
     }
 
     @DeleteMapping("/{id}")

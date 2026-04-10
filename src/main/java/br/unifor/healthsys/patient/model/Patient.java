@@ -45,11 +45,20 @@ public class Patient {
     @Enumerated(EnumType.STRING)
     private Sexo sexo;
 
+    @Column(columnDefinition = "TEXT")
+    private String endereco;
+
     @Column(name = "tipo_sanguineo", length = 5)
     private String tipoSanguineo;
 
     @Column(columnDefinition = "TEXT")
     private String alergias;
+
+    @Column(name = "historico_vacinas", columnDefinition = "TEXT")
+    private String historicoVacinas;
+
+    @Column(nullable = false)
+    private boolean ativo = true;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
