@@ -1,5 +1,6 @@
 package br.unifor.healthsys.patient.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +12,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "patients")
@@ -51,11 +54,15 @@ public class Patient {
     @Column(name = "tipo_sanguineo", length = 5)
     private String tipoSanguineo;
 
-    @Column(columnDefinition = "TEXT")
-    private String alergias;
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @Builder.Default
+    private List<Allergy> alergias = new ArrayList<>();
 
-    @Column(name = "historico_vacinas", columnDefinition = "TEXT")
-    private String historicoVacinas;
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @Builder.Default
+    private List<Vaccine> vacinas = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean ativo = true;
