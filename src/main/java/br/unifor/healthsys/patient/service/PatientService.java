@@ -1,10 +1,13 @@
 package br.unifor.healthsys.patient.service;
 
+import br.unifor.healthsys.patient.model.Allergy;
 import br.unifor.healthsys.patient.model.Patient;
+import br.unifor.healthsys.patient.model.Vaccine;
 import br.unifor.healthsys.patient.exception.ConflictException;
 import br.unifor.healthsys.patient.exception.NotFoundException;
 import br.unifor.healthsys.patient.repository.PatientRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,8 +21,10 @@ public class PatientService {
         this.patientRepository = patientRepository;
     }
 
+    @Transactional
     public Patient create(Patient patient) {
         validateCpf(patient.getCpf(), null);
+        associateChildren(patient);
         return patientRepository.save(patient);
     }
 
@@ -45,6 +50,7 @@ public class PatientService {
         return patientRepository.findByNomeContainingIgnoreCase(nome);
     }
 
+    @Transactional
     public Patient update(Long id, Patient updated) {
         Patient existing = findById(id);
         validateCpf(updated.getCpf(), id);
@@ -57,12 +63,24 @@ public class PatientService {
         existing.setSexo(updated.getSexo());
         existing.setEndereco(updated.getEndereco());
         existing.setTipoSanguineo(updated.getTipoSanguineo());
-        existing.setAlergias(updated.getAlergias());
-        existing.setHistoricoVacinas(updated.getHistoricoVacinas());
         existing.setAtivo(updated.isAtivo());
+
+        existing.getAlergias().clear();
+        for (Allergy a : updated.getAlergias()) {
+            a.setPatient(existing);
+            existing.getAlergias().add(a);
+        }
+
+        existing.getVacinas().clear();
+        for (Vaccine v : updated.getVacinas()) {
+            v.setPatient(existing);
+            existing.getVacinas().add(v);
+        }
+
         return patientRepository.save(existing);
     }
 
+    @Transactional
     public Patient updateStatus(Long id, boolean ativo) {
         Patient existing = findById(id);
         existing.setAtivo(ativo);
@@ -71,6 +89,15 @@ public class PatientService {
 
     public void delete(Long id) {
         patientRepository.delete(findById(id));
+    }
+
+    private void associateChildren(Patient patient) {
+        if (patient.getAlergias() != null) {
+            patient.getAlergias().forEach(a -> a.setPatient(patient));
+        }
+        if (patient.getVacinas() != null) {
+            patient.getVacinas().forEach(v -> v.setPatient(patient));
+        }
     }
 
     private void validateCpf(String cpf, Long currentPatientId) {
