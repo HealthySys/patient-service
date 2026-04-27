@@ -24,8 +24,18 @@ public class Allergy {
     @Column(name = "nome_alergia", nullable = false, length = 200)
     private String nomeAlergia;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Severidade severidade;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
     @JsonBackReference
     private Patient patient;
+
+    public enum Severidade {
+        LEVE,
+        MODERADA,
+        GRAVE
+    }
 }
