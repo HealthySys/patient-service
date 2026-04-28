@@ -1,5 +1,7 @@
 package br.unifor.healthsys.patient.service;
 
+import br.unifor.healthsys.patient.dto.AllergyInput;
+import br.unifor.healthsys.patient.dto.VaccineInput;
 import br.unifor.healthsys.patient.model.Allergy;
 import br.unifor.healthsys.patient.model.Patient;
 import br.unifor.healthsys.patient.model.Vaccine;
@@ -103,6 +105,50 @@ public class PatientService {
     @CacheEvict(value = "patient", key = "#id")
     public void delete(Long id) {
         patientRepository.delete(findById(id));
+    }
+
+    @Transactional
+    @CacheEvict(value = "patient", key = "#patientId")
+    public Patient addAllergies(Long patientId, List<AllergyInput> inputs) {
+        Patient patient = findById(patientId);
+        if (inputs == null || inputs.isEmpty()) {
+            return patient;
+        }
+        for (AllergyInput input : inputs) {
+            if (input == null || input.nomeAlergia() == null || input.nomeAlergia().isBlank()) {
+                continue;
+            }
+            Allergy allergy = Allergy.builder()
+                    .nomeAlergia(input.nomeAlergia())
+                    .severidade(input.severidade())
+                    .patient(patient)
+                    .build();
+            patient.getAlergias().add(allergy);
+        }
+        return patientRepository.save(patient);
+    }
+
+    @Transactional
+    @CacheEvict(value = "patient", key = "#patientId")
+    public Patient addVaccines(Long patientId, List<VaccineInput> inputs) {
+        Patient patient = findById(patientId);
+        if (inputs == null || inputs.isEmpty()) {
+            return patient;
+        }
+        for (VaccineInput input : inputs) {
+            if (input == null || input.nomeVacina() == null || input.nomeVacina().isBlank()) {
+                continue;
+            }
+            Vaccine vaccine = Vaccine.builder()
+                    .nomeVacina(input.nomeVacina())
+                    .dataAplicacao(input.dataAplicacao())
+                    .lote(input.lote())
+                    .profissionalResp(input.profissionalResp())
+                    .patient(patient)
+                    .build();
+            patient.getVacinas().add(vaccine);
+        }
+        return patientRepository.save(patient);
     }
 
     public Patient findOwnPatient(AuthenticatedUser authenticatedUser) {
