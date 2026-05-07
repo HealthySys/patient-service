@@ -1,6 +1,7 @@
 package br.unifor.healthsys.patient.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -21,7 +22,7 @@ public class CacheConfig {
     @Bean
     public RedisCacheConfiguration redisCacheConfiguration() {
         Hibernate6Module hibernateModule = new Hibernate6Module();
-        hibernateModule.configure(Hibernate6Module.Feature.FORCE_LAZY_LOADING, false);
+        hibernateModule.configure(Hibernate6Module.Feature.FORCE_LAZY_LOADING, true);
         hibernateModule.configure(Hibernate6Module.Feature.SERIALIZE_IDENTIFIER_FOR_LAZY_NOT_LOADED_OBJECTS, true);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -34,7 +35,8 @@ public class CacheConfig {
                 BasicPolymorphicTypeValidator.builder()
                         .allowIfSubType(Object.class)
                         .build(),
-                ObjectMapper.DefaultTyping.NON_FINAL
+                ObjectMapper.DefaultTyping.EVERYTHING,
+                JsonTypeInfo.As.PROPERTY
         );
 
         return RedisCacheConfiguration.defaultCacheConfig()

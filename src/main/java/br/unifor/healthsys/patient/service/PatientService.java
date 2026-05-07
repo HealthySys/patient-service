@@ -1,6 +1,7 @@
 package br.unifor.healthsys.patient.service;
 
 import br.unifor.healthsys.patient.dto.AllergyInput;
+import br.unifor.healthsys.patient.dto.InternalPatientSummaryResponse;
 import br.unifor.healthsys.patient.dto.VaccineInput;
 import br.unifor.healthsys.patient.model.Allergy;
 import br.unifor.healthsys.patient.model.Patient;
@@ -11,6 +12,7 @@ import br.unifor.healthsys.patient.repository.PatientRepository;
 import br.unifor.healthsys.patient.security.AuthenticatedUser;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +30,10 @@ public class PatientService {
     }
 
     @Transactional
-    @CacheEvict(value = "patient", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = "patient", allEntries = true),
+            @CacheEvict(value = "patient-summary", allEntries = true)
+    })
     public Patient create(Patient patient) {
         validateCpf(patient.getCpf(), null);
         associateChildren(patient);
@@ -43,10 +48,22 @@ public class PatientService {
         return patientRepository.findByAtivo(ativo);
     }
 
-    @Cacheable("patient")
     public Patient findById(Long id) {
         return patientRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Paciente nao encontrado: " + id));
+    }
+
+    @Cacheable(value = "patient-summary", key = "#id")
+    @Transactional(readOnly = true)
+    public InternalPatientSummaryResponse findSummaryById(Long id) {
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Paciente nao encontrado: " + id));
+        return new InternalPatientSummaryResponse(
+                patient.getId(),
+                patient.getNome(),
+                patient.isAtivo(),
+                patient.getEmail()
+        );
     }
 
     public Patient findByCpf(String cpf) {
@@ -64,7 +81,10 @@ public class PatientService {
     }
 
     @Transactional
-    @CacheEvict(value = "patient", key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = "patient", key = "#id"),
+            @CacheEvict(value = "patient-summary", key = "#id")
+    })
     public Patient update(Long id, Patient updated) {
         Patient existing = findById(id);
         validateCpf(updated.getCpf(), id);
@@ -95,14 +115,20 @@ public class PatientService {
     }
 
     @Transactional
-    @CacheEvict(value = "patient", key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = "patient", key = "#id"),
+            @CacheEvict(value = "patient-summary", key = "#id")
+    })
     public Patient updateStatus(Long id, boolean ativo) {
         Patient existing = findById(id);
         existing.setAtivo(ativo);
         return patientRepository.save(existing);
     }
 
-    @CacheEvict(value = "patient", key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = "patient", key = "#id"),
+            @CacheEvict(value = "patient-summary", key = "#id")
+    })
     public void delete(Long id) {
         patientRepository.delete(findById(id));
     }

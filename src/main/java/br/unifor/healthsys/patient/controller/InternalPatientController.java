@@ -3,7 +3,6 @@ package br.unifor.healthsys.patient.controller;
 import br.unifor.healthsys.patient.dto.AllergyInput;
 import br.unifor.healthsys.patient.dto.InternalPatientSummaryResponse;
 import br.unifor.healthsys.patient.dto.VaccineInput;
-import br.unifor.healthsys.patient.model.Patient;
 import br.unifor.healthsys.patient.service.PatientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,13 +28,7 @@ public class InternalPatientController {
     @GetMapping("/{id}/summary")
     @PreAuthorize("hasRole('INTERNAL_SERVICE')")
     public ResponseEntity<InternalPatientSummaryResponse> findSummary(@PathVariable Long id) {
-        Patient patient = patientService.findById(id);
-        return ResponseEntity.ok(new InternalPatientSummaryResponse(
-                patient.getId(),
-                patient.getNome(),
-                patient.isAtivo(),
-                patient.getEmail()
-        ));
+        return ResponseEntity.ok(patientService.findSummaryById(id));
     }
 
     @PostMapping("/{id}/allergies")
