@@ -125,14 +125,6 @@ public class PatientService {
         return patientRepository.save(existing);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "patient", key = "#id"),
-            @CacheEvict(value = "patient-summary", key = "#id")
-    })
-    public void delete(Long id) {
-        patientRepository.delete(findById(id));
-    }
-
     @Transactional
     @CacheEvict(value = "patient", key = "#patientId")
     public Patient addAllergies(Long patientId, List<AllergyInput> inputs) {

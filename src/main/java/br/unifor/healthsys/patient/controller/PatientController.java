@@ -84,11 +84,4 @@ public class PatientController {
         return ResponseEntity.ok(patientService.updateStatus(id, ativo));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','ENFERMEIRO','MEDICO')")
-    @Audited(action = "DELETE", resource = "PATIENT")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        patientService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
 }
