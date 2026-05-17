@@ -31,6 +31,12 @@ public class Vaccine {
     @Column(name = "data_aplicacao", nullable = false)
     private LocalDate dataAplicacao;
 
+    @Column(length = 50)
+    private String lote;
+
+    @Column(name = "profissional_resp", length = 200)
+    private String profissionalResp;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
     @JsonBackReference

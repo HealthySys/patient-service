@@ -35,7 +35,8 @@ public class Patient {
     @Column(name = "data_nascimento", nullable = false)
     private LocalDate dataNascimento;
 
-    @Column(unique = true, length = 11)
+    @NotBlank
+    @Column(nullable = false, unique = true, length = 11)
     private String cpf;
 
     @Email
