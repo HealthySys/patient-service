@@ -2,13 +2,11 @@ package br.unifor.healthsys.patient.controller;
 
 import br.unifor.healthsys.patient.audit.Audited;
 import br.unifor.healthsys.patient.model.Patient;
-import br.unifor.healthsys.patient.security.AuthenticatedUser;
 import br.unifor.healthsys.patient.service.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,22 +35,10 @@ public class PatientController {
         return ResponseEntity.ok(patientService.findAll(ativo));
     }
 
-    @GetMapping("/me")
-    @PreAuthorize("hasRole('PACIENTE')")
-    @Audited(action = "READ_SELF", resource = "PATIENT")
-    public ResponseEntity<Patient> findCurrentPatient(@AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-        return ResponseEntity.ok(patientService.findOwnPatient(authenticatedUser));
-    }
-
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MEDICO','ENFERMEIRO','RECEPCIONISTA','ADMIN','PACIENTE')")
+    @PreAuthorize("hasAnyRole('MEDICO','ENFERMEIRO','RECEPCIONISTA','ADMIN')")
     @Audited(action = "READ", resource = "PATIENT")
-    public ResponseEntity<Patient> findById(@PathVariable Long id,
-                                            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-        if (authenticatedUser != null && authenticatedUser.hasRole("PACIENTE")) {
-            return ResponseEntity.ok(patientService.findAuthorizedById(id, authenticatedUser));
-        }
-
+    public ResponseEntity<Patient> findById(@PathVariable Long id) {
         return ResponseEntity.ok(patientService.findById(id));
     }
 

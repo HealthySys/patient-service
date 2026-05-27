@@ -9,11 +9,9 @@ import br.unifor.healthsys.patient.model.Vaccine;
 import br.unifor.healthsys.patient.exception.ConflictException;
 import br.unifor.healthsys.patient.exception.NotFoundException;
 import br.unifor.healthsys.patient.repository.PatientRepository;
-import br.unifor.healthsys.patient.security.AuthenticatedUser;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,11 +67,6 @@ public class PatientService {
     public Patient findByCpf(String cpf) {
         return patientRepository.findByCpf(cpf)
                 .orElseThrow(() -> new NotFoundException("Paciente nao encontrado com CPF: " + cpf));
-    }
-
-    public Patient findByEmail(String email) {
-        return patientRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new NotFoundException("Paciente nao encontrado para o usuario autenticado."));
     }
 
     public List<Patient> searchByName(String nome) {
@@ -167,30 +160,6 @@ public class PatientService {
             patient.getVacinas().add(vaccine);
         }
         return patientRepository.save(patient);
-    }
-
-    public Patient findOwnPatient(AuthenticatedUser authenticatedUser) {
-        if (authenticatedUser == null || authenticatedUser.email() == null || authenticatedUser.email().isBlank()) {
-            throw new AccessDeniedException("Sessao sem e-mail valido para localizar o paciente.");
-        }
-
-        return findByEmail(authenticatedUser.email());
-    }
-
-    public Patient findAuthorizedById(Long id, AuthenticatedUser authenticatedUser) {
-        Patient patient = findById(id);
-        ensureOwnPatientAccess(patient, authenticatedUser);
-        return patient;
-    }
-
-    public void ensureOwnPatientAccess(Patient patient, AuthenticatedUser authenticatedUser) {
-        if (authenticatedUser == null || authenticatedUser.email() == null || authenticatedUser.email().isBlank()) {
-            throw new AccessDeniedException("Sessao sem e-mail valido para validar acesso ao paciente.");
-        }
-
-        if (patient.getEmail() == null || !patient.getEmail().equalsIgnoreCase(authenticatedUser.email())) {
-            throw new AccessDeniedException("Paciente pode visualizar apenas o proprio cadastro.");
-        }
     }
 
     private void associateChildren(Patient patient) {
